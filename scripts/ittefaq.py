@@ -6,20 +6,24 @@ import re
 import time
 import datetime
 import csv
-import requests
 import json
-import bs4
 import validators
 from tqdm import tqdm
 import coloredlogs, logging
-from user_agent import generate_user_agent
-from TorCtl import TorCtl
+
+from base import NewsDataCollectionHelper
+NDH = NewsDataCollectionHelper()
 
 coloredlogs.install(level='DEBUG')
 
-URL = 'http://www.prothom-alo.com'
-DATE = ''
-TITLE = 'prothom-alo'
+URL = 'http://www.ittefaq.com.bd'
+DATE = datetime.datetime.today().strftime('%Y/%m/%d')
+pages = ['first-page', 'last-page', 'city', 'country', 'world-news',
+         'entertainment', 'sports-news', 'it-corner', 'trade', 'editorial',
+         'sub-editorial', 'drishtikon', 'aiojon', 'aunoshilon', 
+         'taronner-shomokalin-chinta', 'second-edition', 'others']
+
+TITLE = 'ittefaq'
 
 json_data = []
 
@@ -34,35 +38,16 @@ def generate_json(title, subject, image, caption, description):
 
 def save_to_csv():
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    directory = "data/"
+    directory = "../data/"
     try:
         os.stat(directory)
     except:
         os.mkdir(directory)
-    fp = csv.writer(open('data/' + TITLE +'_'+ timestr + ".csv", "wb+"))
+    fp = csv.writer(open('../data/' + TITLE +'_'+ timestr + ".csv", "wb+"))
     fp.writerow(["SL", "title", "subject", "image", "caption", "description"])
     for item in json_data:
         fp.writerow([item["SL"], item["title"], item["subject"], item["image"], item["caption"], item["description"]])
     
-
-
-def header():
-    return {'User-agent': generate_user_agent()}
-
-
-def renew_connection():
-    try:
-        conn = TorCtl.connect(controlAddr="127.0.0.1", controlPort=9051, passphrase="@hirok32")
-        conn.send_signal("NEWNYM")
-        conn.close()
-    except:
-        logging.critical("SOMETHINGS WENT WRONG!!, YOUR IP MAY BE BLOCKED IF CONTINUE. PLEASE EXIT AND BE SAFE")
-
-
-def get_request_data(url):
-    renew_connection()
-    resp = requests.get(url, headers=header())
-    return resp
 
 def get_input():
     try:
@@ -73,7 +58,7 @@ def get_input():
             return False
         try:
             if date:
-                datetime.datetime.strptime(date, '%Y-%m-%d')
+                datetime.datetime.strptime(date, '%Y/%m/%d')
             else:
                 date = ""
         except:
@@ -89,9 +74,16 @@ def get_input():
 
 def get_headlines(soup_parser, page):
     try:
-        headlines = soup_parser.find("div", attrs={"class": "contents"}).find("div", attrs={"class": "row"}).find_all("div", attrs={"class": "col"})
+        try:
+            lead_headline = soup_parser.find("div", attrs={"class": "sitewidthleft"}).find("div", attrs={"class": "menuNewsLead"})
+        except:
+            lead_headline = None
+        headlines = soup_parser.find("div", attrs={"class": "sitewidthleft"}).find_all("div", attrs={"class": "menuNewsMore"})
+        if lead_headline:
+            headlines.insert(0, lead_headline)
+
     except AttributeError:
-        logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page + 1))
+        logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page))
         save_to_csv()
         sys.exit()
     return headlines
@@ -169,35 +161,30 @@ def main():
     base_url = _input[0]
     if not base_url:
         return
-    if _input[1]:
-        req_url = os.path.join(base_url, 'archive/', _input[1])
-    else:
-        req_url = os.path.join(base_url, 'archive/')
-    container = {}
-    for page in range(100):
-        prepared_url = os.path.join(req_url, '?page={}'.format(page + 1))
-        resp = get_request_data(prepared_url)
-        soup = bs4.BeautifulSoup(resp.text, 'html.parser')
+    req_url = os.path.join(base_url, 'print-edition/')
+    for page in pages:
+        prepared_url = os.path.join(req_url, '{}/{}'.format(page, _input[1]))
+        resp = NDH.get_request_data(prepared_url)
+        soup = NDH.get_bs4_object(resp)
         
         headlines = get_headlines(soup, page)
-        
-        logging.debug("GETTING DATA OF PAGE {}".format(page + 1))
-        for headline in tqdm(headlines):
-            link = base_url + headline.a['href']
-            detail_req = requests.get(link)
-            soup2 = bs4.BeautifulSoup(detail_req.text, 'html.parser')
-            details_wrapper = get_details_wrapper(soup2)
-            if details_wrapper:
-                title = get_title(details_wrapper)
-                subject = get_subject(details_wrapper)
-                logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
-                image = get_main_image(details_wrapper)
-                caption = get_image_caption(details_wrapper)
-                # get artice body
-                article_wrapper = get_description_body(details_wrapper)
-                if article_wrapper:
-                    description = get_description(article_wrapper)
-                    generate_json(title, subject, image, caption, description) 
+        # logging.debug("GETTING DATA OF PAGE {}".format(page))
+        # for headline in tqdm(headlines):
+        #     link = base_url + headline.a['href']
+        #     detail_req = NDH.get_request_data(link)
+        #     soup2 = NDH.get_bs4_object(detail_req)
+        #     details_wrapper = get_details_wrapper(soup2)
+        #     if details_wrapper:
+        #         title = get_title(details_wrapper)
+        #         subject = get_subject(details_wrapper)
+        #         logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
+        #         image = get_main_image(details_wrapper)
+        #         caption = get_image_caption(details_wrapper)
+        #         # get artice body
+        #         article_wrapper = get_description_body(details_wrapper)
+        #         if article_wrapper:
+        #             description = get_description(article_wrapper)
+        #             generate_json(title, subject, image, caption, description) 
 
 
 if __name__ == '__main__':
