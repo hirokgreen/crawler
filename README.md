@@ -23,7 +23,7 @@ Restart Tor again to the configuration changes are applied.
 
 - `/etc/init.d/tor restart`
 
-## install PyTorCtl in your Python environment
+## Install PyTorCtl in Python environment
 
 Install pytorctl which is a python based module to interact with the Tor Controller.
 
@@ -63,9 +63,9 @@ restart privoxy
 
 install all dependencies from requirements.txt
 
-- pip install -r requirements.txt
+- `pip install -r requirements.txt`
 
-### run crawlwr
+### run crawler
 (run with sudo for resolve permission issue of torctrl)
 
 - `sudo python scripts/<file-name>.py`
