@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+import time
+import csv
 import requests
 import bs4
 import coloredlogs, logging
@@ -27,3 +30,18 @@ class NewsDataCollectionHelper(object):
 
     def get_bs4_object(self, resp):
         return bs4.BeautifulSoup(resp.text, 'html.parser')
+
+    def save_to_csv(self, title, json_data):
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        directory = "data/{}/".format(title)
+        try:
+            try:
+                os.stat(directory)
+            except:
+                os.mkdir(directory)
+            fp = csv.writer(open(directory + title +'_'+ timestr + ".csv", "wb+"))
+            fp.writerow(["SL", "title", "subject", "image", "caption", "description"])
+            for item in json_data:
+                fp.writerow([item["SL"], item["title"], item["subject"], item["image"], item["caption"], item["description"]])
+        except OSError:
+            logging.critical("YOU HAVEN'T CREATE /DATA DIRECTORY. PLEASE CREATE IT AND THEN RE-RUN THE SCRIPT")

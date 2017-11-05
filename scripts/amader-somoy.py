@@ -3,9 +3,7 @@
 import os
 import sys
 import re
-import time
 import datetime
-import csv
 import json
 import validators
 from tqdm import tqdm
@@ -31,19 +29,6 @@ def generate_json(title, subject, image, caption, description):
     description = description.encode('utf8')
     json_data.append({"SL": len(json_data) + 1, "title": title, "subject": subject, "image": image, "caption": caption, "description": description})
 
-
-def save_to_csv():
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    directory = "../data/"
-    try:
-        os.stat(directory)
-    except:
-        os.mkdir(directory)
-    fp = csv.writer(open('../data/' + TITLE +'_'+ timestr + ".csv", "wb+"))
-    fp.writerow(["SL", "title", "subject", "image", "caption", "description"])
-    for item in json_data:
-        fp.writerow([item["SL"], item["title"], item["subject"], item["image"], item["caption"], item["description"]])
-    
 
 def get_input():
     try:
@@ -74,7 +59,7 @@ def get_headlines(soup_parser, page):
 
     except AttributeError:
         logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page))
-        save_to_csv()
+        NDH.save_to_csv(TITLE, json_data)
         sys.exit()
     return headlines
 

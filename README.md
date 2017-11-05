@@ -60,6 +60,7 @@ restart privoxy
 ## install dependecies of crawler
 
 - goto the `/scrapper` directory
+- create `data` directory (important)
 
 install all dependencies from requirements.txt
 
