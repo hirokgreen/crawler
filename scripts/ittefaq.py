@@ -76,7 +76,7 @@ def get_headlines(soup_parser, page):
 
 def get_details_wrapper(soup_object):
     try:
-        wrapper = soup_object.find("div", attrs={"class": "detail_widget"}).find("div", attrs={"class": "content_detail"})
+        wrapper = soup_object.find("div", attrs={"class": "detailsNews"})
     except:
         logging.warning("ERROR WHILE PARSING DETAILS")  
         return False   
@@ -85,7 +85,7 @@ def get_details_wrapper(soup_object):
 
 def get_title(body):
     try:
-        title = body.find("div", attrs={"class": "right_title"}).h1.string
+        title = body.find("div", attrs={"class": "headline2"}).string
     except:
         return 'N/A'
     return title
@@ -93,7 +93,7 @@ def get_title(body):
 
 def get_subject(body):
     try:
-        subject = body.find("div", attrs={"class": "right_title"}).h2.string
+        subject = body.find("div", attrs={"class": "headline3"}).string
     except:
         return 'N/A'
     return subject
@@ -102,9 +102,7 @@ def get_subject(body):
 def get_description_body(body):
     try:
         description = body.find(
-            "div", attrs={"class": "detail_holder"}).find(
-                "div", attrs={"class": "right_part"}).find(
-                    "div", attrs={"itemprop": "articleBody"})
+            "div", attrs={"class": "details"})
     except:
         return False
     return description
@@ -112,7 +110,7 @@ def get_description_body(body):
 
 def get_main_image(body):
     try:
-        image = body.img['src']
+        image = body.find("div", attrs={"class": "detailsimage"}).img['src']
     except:
         return 'N/A'
     return 'http:' + image
@@ -120,7 +118,7 @@ def get_main_image(body):
 
 def get_image_caption(body):
     try:
-        caption = body.img['alt']
+        caption = body.find("div", attrs={"class": "detailsimage"}).img['alt']
     except:
         return "N/A"
     return caption
@@ -129,7 +127,7 @@ def get_image_caption(body):
 def get_description(body):
     try:
         array = []
-        paras = body.find_all('p')
+        paras = body.find_all('div')
         for para in paras:
             array.append(para.get_text())
         if array:
@@ -151,25 +149,27 @@ def main():
         prepared_url = os.path.join(req_url, '{}/{}'.format(page, _input[1]))
         resp = NDH.get_request_data(prepared_url)
         soup = NDH.get_bs4_object(resp)
-        
+
         headlines = get_headlines(soup, page)
-        # logging.debug("GETTING DATA OF PAGE {}".format(page))
-        # for headline in tqdm(headlines):
-        #     link = base_url + headline.a['href']
-        #     detail_req = NDH.get_request_data(link)
-        #     soup2 = NDH.get_bs4_object(detail_req)
-        #     details_wrapper = get_details_wrapper(soup2)
-        #     if details_wrapper:
-        #         title = get_title(details_wrapper)
-        #         subject = get_subject(details_wrapper)
-        #         logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
-        #         image = get_main_image(details_wrapper)
-        #         caption = get_image_caption(details_wrapper)
-        #         # get artice body
-        #         article_wrapper = get_description_body(details_wrapper)
-        #         if article_wrapper:
-        #             description = get_description(article_wrapper)
-        #             generate_json(title, subject, image, caption, description) 
+        logging.debug("GETTING DATA OF PAGE {}".format(page))
+
+        for headline in tqdm(headlines):
+            link = headline.a['href']
+            detail_req = NDH.get_request_data(link)
+            soup2 = NDH.get_bs4_object(detail_req)
+            details_wrapper = get_details_wrapper(soup2)
+
+            if details_wrapper:
+                title = get_title(details_wrapper)
+                subject = get_subject(details_wrapper)
+                logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
+                image = get_main_image(details_wrapper)
+                caption = get_image_caption(details_wrapper)
+                # get artice body
+                article_wrapper = get_description_body(details_wrapper)
+                if article_wrapper:
+                    description = get_description(article_wrapper)
+                    generate_json(title, subject, image, caption, description)
 
 
 if __name__ == '__main__':
