@@ -106,7 +106,7 @@ def get_description_body(body):
     try:
         description = body.find(
             "div", attrs={"class": "dtl_section"}
-        ).find_all('p').previous_sibling.text
+        ).text
     except:
         return False
     return description
@@ -178,13 +178,10 @@ def main():
                 # get artice body
                 article_wrapper = get_description_body(details_wrapper)
 
-                print article_wrapper
+                generate_json(title, subject, image, caption, article_wrapper)
             break
         break
-        #         if article_wrapper:
-        #             description = get_description(article_wrapper)
-        #             generate_json(title, subject, image, caption, description) 
-
+    NDH.save_to_csv(TITLE, json_data)
 
 if __name__ == '__main__':
     main()
