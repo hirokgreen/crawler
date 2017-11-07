@@ -148,7 +148,6 @@ def main():
         prepared_url = os.path.join(req_url, '{}/{}'.format(page, _input[1]))
         resp = NDH.get_request_data(prepared_url)
         soup = NDH.get_bs4_object(resp)
-
         headlines = get_headlines(soup, page)
         logging.debug("GETTING DATA OF PAGE {}".format(page))
 
