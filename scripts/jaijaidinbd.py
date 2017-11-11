@@ -14,10 +14,11 @@ NDH = NewsDataCollectionHelper()
 
 coloredlogs.install(level='DEBUG')
 
-URL = 'http://www.dainikamadershomoy.com'
-DATE = datetime.datetime.today().strftime('%Y/%m/%d')
+URL = 'http://www.jaijaidinbd.com'
+DATE = datetime.datetime.today().strftime('%d-%m-%Y')
+pages = [13, 14, 15, 16, 19, 38, 44, 63, 64, 74, 93]
 
-TITLE = 'amader-shomoy'
+TITLE = 'samakal'
 
 json_data = []
 
@@ -39,11 +40,11 @@ def get_input():
             return False
         try:
             if date:
-                datetime.datetime.strptime(date, '%Y/%m/%d')
+                datetime.datetime.strptime(date, '%d-%m-%Y')
             else:
                 date = ""
         except:
-            logging.critical("INCORRECT DATE FORMAT, should be as YYYY-MM-DD")
+            logging.critical("INCORRECT DATE FORMAT, should be as DD-MM-YYYY")
             return False
     except:
         logging.critical("SOMETHINGS WENT WRONG!, Pleasee provide correct input")
@@ -56,29 +57,23 @@ def get_input():
 def get_headlines(soup_parser, page):
     try:
         headlines = soup_parser.find(
-            "div", attrs={"class": "all_news_content_block"}
-        ).find(
-            "div", attrs={"class": "row"}
-        ).find_all(
-            "div", attrs={"class": "col-md-6"}
-        )
+            "div", attrs={"id": "container"}).find(
+                "div", attrs={"class": "wrapper"}).find(
+                    'table').find('td').find_all(
+                        "div", attrs={"id": "unicode_font"})
 
     except AttributeError:
-        logging.warning(
-            "PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(
-                page)
-        )
-        NDH.save_to_csv(TITLE, json_data)
+        logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page))
         sys.exit()
     return headlines
 
 
-def get_details_wrapper(soup_object):
+def get_details_header(soup_object):
     try:
         wrapper = soup_object.find(
-            "div", attrs={"id": "details_content"}
+            "div", attrs={"class": "main-div"}
         ).find(
-            "div", attrs={"class": "col-md-12"}
+            "div", attrs={"class": "col-md-10"}
         )
     except:
         logging.warning("ERROR WHILE PARSING DETAILS")  
@@ -86,9 +81,22 @@ def get_details_wrapper(soup_object):
     return wrapper
 
 
+def get_details_wrapper(soup_object):
+    try:
+        wrapper = soup_object.find(
+            "div", attrs={"class": "main-div"}
+        ).find(
+            "div", attrs={"class": "col-md-6"}
+        )
+    except:
+        logging.warning("ERROR WHILE PARSING DETAILS")
+        return False
+    return wrapper
+
+
 def get_title(body):
     try:
-        title = body.find("div", attrs={"class": "headline_section"}).h1.string
+        title = body.h1.string
     except:
         return 'N/A'
     return title
@@ -96,7 +104,9 @@ def get_title(body):
 
 def get_subject(body):
     try:
-        subject = body.find("div", attrs={"class": "headline_section"}).h3.string
+        subject = body.find(
+            "p", attrs={"class": "detail-reporter"}
+        ).text
     except:
         return 'N/A'
     return subject
@@ -105,20 +115,17 @@ def get_subject(body):
 def get_description_body(body):
     try:
         description = body.find(
-            "div", attrs={"class": "dtl_section"}
-        ).text
+            "div", attrs={"class": "description"}
+        )
+        [s.extract() for s in description('script')]
     except:
         return False
-    return description
+    return description.text
 
 
 def get_main_image(body):
     try:
-        image = body.find(
-            "div", attrs={"class": "dtl_section"}
-        ).find(
-            "div", attrs={"class": "img"}
-        ).img['src']
+        image = body.img['src']
     except:
         return 'N/A'
     return 'http:' + image
@@ -126,11 +133,7 @@ def get_main_image(body):
 
 def get_image_caption(body):
     try:
-        caption = body.find(
-            "div", attrs={"class": "dtl_section"}
-        ).find(
-            "div", attrs={"class": "img"}
-        ).img['alt']
+        caption = body.img['alt']
     except:
         return "N/A"
     return caption
@@ -156,31 +159,35 @@ def main():
     base_url = _input[0]
     if not base_url:
         return
-    req_url = os.path.join(base_url, 'all-news/todays-paper/')
-    for page in range(1, 6):
-        prepared_url = os.path.join(req_url, '?pg={}'.format(page))
+    req_url = os.path.join(base_url, '?view=details&type=main&cat_id=1&menu_id=')
+    for page in pages:
+        prepared_url = os.path.join(req_url, '{}&archiev=yes&arch_date={}'.format(page, _input[1]))
         resp = NDH.get_request_data(prepared_url)
         soup = NDH.get_bs4_object(resp)
         headlines = get_headlines(soup, page)
-        logging.debug("GETTING DATA OF PAGE {}".format(page))
+        logging.debug("GETTING DATA OF : {}".format(page))
         for headline in tqdm(headlines):
-            link = headline.a['href']
+            link = base_url + headline.a['href']
             detail_req = NDH.get_request_data(link)
             soup2 = NDH.get_bs4_object(detail_req)
+            details_header = get_details_header(soup2)
             details_wrapper = get_details_wrapper(soup2)
 
+            title = get_title(details_header)
+            subject = get_subject(details_header)
+
             if details_wrapper:
-                title = get_title(details_wrapper)
-                subject = get_subject(details_wrapper)
                 logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
                 image = get_main_image(details_wrapper)
                 caption = get_image_caption(details_wrapper)
                 # get artice body
-                article_wrapper = get_description_body(details_wrapper)
+                description = get_description_body(details_wrapper)
 
-                generate_json(title, subject, image, caption, article_wrapper)
-    # save to csv file
-    NDH.save_to_csv(TITLE, json_data)
+                generate_json(title, subject, image, caption, description)
+            break
+        break
+    # NDH.save_to_csv(TITLE, json_data)
+
 
 if __name__ == '__main__':
     main()

@@ -63,7 +63,6 @@ def get_headlines(soup_parser, page):
 
     except AttributeError:
         logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page))
-        NDH.save_to_csv(TITLE, json_data)
         sys.exit()
     return headlines
 
@@ -184,8 +183,6 @@ def main():
                 description = get_description_body(details_wrapper)
 
                 generate_json(title, subject, image, caption, description)
-            break
-        break
     NDH.save_to_csv(TITLE, json_data)
 
 
