@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
+import os, sys
 import time
 import csv
 import requests
@@ -16,6 +16,7 @@ class NewsDataCollectionHelper(object):
         self.header =  {'User-agent': generate_user_agent()}
 
     def renew_identity(self):
+        self.check_directory()
         try:
             conn = TorCtl.connect(controlAddr="127.0.0.1", controlPort=9051, passphrase="@hirok32")
             conn.send_signal("NEWNYM")
@@ -30,6 +31,15 @@ class NewsDataCollectionHelper(object):
 
     def get_bs4_object(self, resp):
         return bs4.BeautifulSoup(resp.text, 'html.parser')
+
+    def check_directory(self):
+        directory = "data/"
+        try:
+            os.stat(directory)
+        except OSError:
+            logging.critical("YOU HAVEN'T CREATE /DATA DIRECTORY. PLEASE CREATE IT AND AFTER THAT RE-RUN THE SCRIPT")
+            sys.exit()
+
 
     def save_to_csv(self, title, json_data):
         timestr = time.strftime("%Y%m%d-%H%M%S")

@@ -144,20 +144,20 @@ def main():
         link = base_url + headline.a['href']
         detail_req = NDH.get_request_data(link)
         soup2 = NDH.get_bs4_object(detail_req)
-        details_wrapper = get_details_wrapper(soup2)
-        if details_wrapper:
-            title = get_title(details_wrapper)
-            subject = get_subject(details_wrapper)
-            logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
-            image = get_main_image(details_wrapper)
-            caption = get_image_caption(details_wrapper)
-            # get artice body
-            article_wrapper = get_description_body(details_wrapper)
-            if article_wrapper:
-                description = get_description(article_wrapper)
-                generate_json(title, subject, image, caption, description)
+    #     details_wrapper = get_details_wrapper(soup2)
+    #     if details_wrapper:
+    #         title = get_title(details_wrapper)
+    #         subject = get_subject(details_wrapper)
+    #         logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
+    #         image = get_main_image(details_wrapper)
+    #         caption = get_image_caption(details_wrapper)
+    #         # get artice body
+    #         article_wrapper = get_description_body(details_wrapper)
+    #         if article_wrapper:
+    #             description = get_description(article_wrapper)
+    #             generate_json(title, subject, image, caption, description)
     
-    NDH.save_to_csv(TITLE, json_data)
+    # NDH.save_to_csv(TITLE, json_data)
 
 
 if __name__ == '__main__':
