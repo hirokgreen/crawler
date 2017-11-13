@@ -53,5 +53,6 @@ class NewsDataCollectionHelper(object):
             fp.writerow(["SL", "title", "subject", "image", "caption", "description"])
             for item in json_data:
                 fp.writerow([item["SL"], item["title"], item["subject"], item["image"], item["caption"], item["description"]])
+            logging.debug("FINISHED DATA COLLECTION OF #{}. THANK YOU".format(title))
         except OSError:
             logging.critical("YOU HAVEN'T CREATE /DATA DIRECTORY. PLEASE CREATE IT AND THEN RE-RUN THE SCRIPT")
