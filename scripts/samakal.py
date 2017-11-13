@@ -62,8 +62,8 @@ def get_headlines(soup_parser, page):
         headlines = soup_parser.find("ul", attrs={"class": "print-news-list"}).find_all("li")
 
     except AttributeError:
-        logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page))
-        sys.exit()
+        logging.warning("PAGE {} NOT AVAILABLE. PROCESSING THE NEXT PAGE".format(page))
+        return None
     return headlines
 
 

@@ -14,11 +14,12 @@ NDH = NewsDataCollectionHelper()
 
 coloredlogs.install(level='DEBUG')
 
-URL = 'http://www.jaijaidinbd.com'
-DATE = datetime.datetime.today().strftime('%d-%m-%Y')
-pages = [13, 14, 15, 16, 19, 38, 44, 63, 64, 74, 93]
+URL = 'http://www.dailysangram.com'
+DATE = datetime.datetime.today().strftime('%Y-%m-%d')
+pages = ['first-page', 'last-page', 'editorial', 'international', 'village-town',
+         'sports', 'blue-greens-hut', 'religion-life', 'economy-trade',]
 
-TITLE = 'samakal'
+TITLE = 'daily-sangram'
 
 json_data = []
 
@@ -40,11 +41,11 @@ def get_input():
             return False
         try:
             if date:
-                datetime.datetime.strptime(date, '%d-%m-%Y')
+                datetime.datetime.strptime(date, '%Y-%m-%d')
             else:
                 date = ""
         except:
-            logging.critical("INCORRECT DATE FORMAT, should be as DD-MM-YYYY")
+            logging.critical("INCORRECT DATE FORMAT, should be as YYYY-MM-DD")
             return False
     except:
         logging.critical("SOMETHINGS WENT WRONG!, Pleasee provide correct input")
@@ -57,14 +58,13 @@ def get_input():
 def get_headlines(soup_parser, page):
     try:
         headlines = soup_parser.find(
-            "div", attrs={"id": "container"}).find(
-                "div", attrs={"class": "wrapper"}).find(
-                    'table').find('td').find_all(
-                        "div", attrs={"id": "unicode_font"})
+            "div", attrs={"class": "mainContent"}).find(
+                "div", attrs={"class": "content"}).find(
+                    'ul').find_all("li")
 
     except AttributeError:
         logging.warning("PAGE {} NOT AVAILABLE. PROCESSING THE NEXT PAGE".format(page))
-        return None
+        return []
     return headlines
 
 
@@ -159,17 +159,16 @@ def main():
     base_url = _input[0]
     if not base_url:
         return
-    req_url = os.path.join(base_url, '?view=details&type=main&cat_id=1&menu_id=')
+    req_url = os.path.join(base_url, 'page/')
     for page in pages:
-        prepared_url = os.path.join(req_url, '{}&archiev=yes&arch_date={}'.format(page, _input[1]))
+        prepared_url = os.path.join(req_url, '{}/{}'.format(page, _input[1]))
         resp = NDH.get_request_data(prepared_url)
         soup = NDH.get_bs4_object(resp)
-        headlines = get_headlines(soup, page)
         logging.debug("GETTING DATA OF : {}".format(page))
+        headlines = get_headlines(soup, page)
         for headline in tqdm(headlines):
-            link = base_url + headline.a['href']
+            link = headline.a['href']
             print link
-            break
     #         detail_req = NDH.get_request_data(link)
     #         soup2 = NDH.get_bs4_object(detail_req)
     #         details_header = get_details_header(soup2)

@@ -68,8 +68,8 @@ def get_headlines(soup_parser, page):
             headlines.insert(0, lead_headline)
 
     except AttributeError:
-        logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page))
-        sys.exit()
+        logging.warning("PAGE {} NOT AVAILABLE. PROCESSING THE NEXT PAGE".format(page))
+        return None
     return headlines
 
 
