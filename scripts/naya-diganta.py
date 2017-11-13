@@ -68,7 +68,9 @@ def get_headlines(soup_parser):
 
 def get_details_wrapper(soup_object):
     try:
-        wrapper = soup_object.find("div", attrs={"class": "detail_widget"}).find("div", attrs={"class": "content_detail"})
+        wrapper = soup_object.find(
+            "div", attrs={"class": "innerPagesLeft"}
+        )
     except:
         logging.warning("ERROR WHILE PARSING DETAILS")  
         return False   
@@ -77,7 +79,7 @@ def get_details_wrapper(soup_object):
 
 def get_title(body):
     try:
-        title = body.find("div", attrs={"class": "right_title"}).h1.string
+        title = body.find("h3", attrs={"class": "articledetail"}).text
     except:
         return 'N/A'
     return title
@@ -85,7 +87,7 @@ def get_title(body):
 
 def get_subject(body):
     try:
-        subject = body.find("div", attrs={"class": "right_title"}).h2.string
+        subject = 'N/A'
     except:
         return 'N/A'
     return subject
@@ -104,15 +106,23 @@ def get_description_body(body):
 
 def get_main_image(body):
     try:
-        image = body.img['src']
+        image = body.find(
+            "div", attrs={"class": "responsiveimage"}
+        ).find(
+            "div", attrs={"class": "thumbnail"}
+        ).img['src']
     except:
         return 'N/A'
-    return 'http:' + image
+    return image
 
 
 def get_image_caption(body):
     try:
-        caption = body.img['alt']
+        caption = body.find(
+            "div", attrs={"class": "responsiveimage"}
+        ).find(
+            "div", attrs={"class": "thumbnail"}
+        ).img['alt']
     except:
         return "N/A"
     return caption
@@ -121,7 +131,9 @@ def get_image_caption(body):
 def get_description(body):
     try:
         array = []
-        paras = body.find_all('p')
+        paras = body.find(
+            "div", attrs={"class": "responsiveimage"}
+        ).find_all('p')
         for para in paras:
             array.append(para.get_text())
         if array:
@@ -147,24 +159,20 @@ def main():
     logging.debug("GETTING DATA OF PAGE {}".format(req_url))
     for headline in tqdm(headlines):
         link = headline.a['href']
-        print link
-        break
-    #     detail_req = NDH.get_request_data(link)
-    #     soup2 = NDH.get_bs4_object(detail_req)
-    #     details_wrapper = get_details_wrapper(soup2)
-    #     if details_wrapper:
-    #         title = get_title(details_wrapper)
-    #         subject = get_subject(details_wrapper)
-    #         logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
-    #         image = get_main_image(details_wrapper)
-    #         caption = get_image_caption(details_wrapper)
-    #         # get artice body
-    #         article_wrapper = get_description_body(details_wrapper)
-    #         if article_wrapper:
-    #             description = get_description(article_wrapper)
-    #             generate_json(title, subject, image, caption, description)
+        detail_req = NDH.get_request_data(link)
+        soup2 = NDH.get_bs4_object(detail_req)
+        details_wrapper = get_details_wrapper(soup2)
+        if details_wrapper:
+            title = get_title(details_wrapper)
+            subject = get_subject(details_wrapper)
+            logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
+            image = get_main_image(details_wrapper)
+            caption = get_image_caption(details_wrapper)
+            # get artice body
+            description = get_description(details_wrapper)
+            generate_json(title, subject, image, caption, description)
     
-    # NDH.save_to_csv(TITLE, json_data)
+        NDH.save_to_csv(TITLE, json_data)
 
 
 if __name__ == '__main__':
