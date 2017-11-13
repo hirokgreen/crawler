@@ -63,16 +63,16 @@ def get_headlines(soup_parser):
 
 def get_details_wrapper(soup_object):
     try:
-        wrapper = soup_object.find("div", attrs={"class": "detail_widget"}).find("div", attrs={"class": "content_detail"})
+        wrapper = soup_object.find("div", attrs={"class": "home_top_left"})
     except:
-        logging.warning("ERROR WHILE PARSING DETAILS")  
-        return False   
+        logging.warning("ERROR WHILE PARSING DETAILS")
+        return False
     return wrapper
 
 
 def get_title(body):
     try:
-        title = body.find("div", attrs={"class": "right_title"}).h1.string
+        title = body.find("h1").string
     except:
         return 'N/A'
     return title
@@ -80,7 +80,7 @@ def get_title(body):
 
 def get_subject(body):
     try:
-        subject = body.find("div", attrs={"class": "right_title"}).h2.string
+        subject = 'N/A'
     except:
         return 'N/A'
     return subject
@@ -88,10 +88,7 @@ def get_subject(body):
 
 def get_description_body(body):
     try:
-        description = body.find(
-            "div", attrs={"class": "detail_holder"}).find(
-                "div", attrs={"class": "right_part"}).find(
-                    "div", attrs={"itemprop": "articleBody"})
+        description = body.find("p").text
     except:
         return False
     return description
@@ -99,15 +96,19 @@ def get_description_body(body):
 
 def get_main_image(body):
     try:
-        image = body.img['src']
+        image = body.find(
+            "img", attrs={"class": "image-responsive2"}
+        )["src"]
     except:
         return 'N/A'
-    return 'http:' + image
+    return image
 
 
 def get_image_caption(body):
     try:
-        caption = body.img['alt']
+        caption = body.find(
+            "img", attrs={"class": "image-responsive2"}
+        )["alt"]
     except:
         return "N/A"
     return caption
@@ -142,21 +143,18 @@ def main():
         link = headline.a['href']
         detail_req = NDH.get_request_data(link)
         soup2 = NDH.get_bs4_object(detail_req)
-        break
-    #     details_wrapper = get_details_wrapper(soup2)
-    #     if details_wrapper:
-    #         title = get_title(details_wrapper)
-    #         subject = get_subject(details_wrapper)
-    #         logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
-    #         image = get_main_image(details_wrapper)
-    #         caption = get_image_caption(details_wrapper)
-    #         # get artice body
-    #         article_wrapper = get_description_body(details_wrapper)
-    #         if article_wrapper:
-    #             description = get_description(article_wrapper)
-    #             generate_json(title, subject, image, caption, description)
-    
-    # NDH.save_to_csv(TITLE, json_data)
+        details_wrapper = get_details_wrapper(soup2)
+        if details_wrapper:
+            title = get_title(details_wrapper)
+            subject = get_subject(details_wrapper)
+            logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
+            image = get_main_image(details_wrapper)
+            caption = get_image_caption(details_wrapper)
+            # get artice body
+            description = get_description(details_wrapper)
+            generate_json(title, subject, image, caption, description)
+
+        NDH.save_to_csv(TITLE, json_data)
 
 
 if __name__ == '__main__':
