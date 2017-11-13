@@ -69,6 +69,10 @@ def get_headlines(soup_parser):
 def get_details_wrapper(soup_object):
     try:
         wrapper = soup_object.find(
+            "div", attrs={"class": "mainPage"}
+        ).find(
+            "div", attrs={"class": "innerPages"}
+        ).find(
             "div", attrs={"class": "innerPagesLeft"}
         )
     except:
@@ -173,6 +177,7 @@ def main():
             generate_json(title, subject, image, caption, description)
     
         NDH.save_to_csv(TITLE, json_data)
+        break
 
 
 if __name__ == '__main__':
