@@ -57,8 +57,7 @@ def get_headlines(soup_parser, page):
         headlines = soup_parser.find("div", attrs={"class": "contents"}).find("div", attrs={"class": "row"}).find_all("div", attrs={"class": "col"})
     except AttributeError:
         logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page + 1))
-        NDH.save_to_csv(TITLE, json_data)
-        sys.exit()
+        return []
     return headlines
 
 
@@ -138,14 +137,13 @@ def main():
         req_url = os.path.join(base_url, 'archive/', _input[1])
     else:
         req_url = os.path.join(base_url, 'archive/')
-    for page in range(100):
+    for page in range(10):
         prepared_url = os.path.join(req_url, '?page={}'.format(page + 1))
         resp = NDH.get_request_data(prepared_url)
         soup = NDH.get_bs4_object(resp)
-        
+        logging.debug("GETTING DATA OF PAGE {}".format(page + 1))        
         headlines = get_headlines(soup, page)
-        
-        logging.debug("GETTING DATA OF PAGE {}".format(page + 1))
+
         for headline in tqdm(headlines):
             link = base_url + headline.a['href']
             detail_req = NDH.get_request_data(link)
@@ -161,8 +159,8 @@ def main():
                 article_wrapper = get_description_body(details_wrapper)
                 if article_wrapper:
                     description = get_description(article_wrapper)
-                    generate_json(title, subject, image, caption, description) 
-
+                    generate_json(title, subject, image, caption, description)
+    NDH.save_to_csv(TITLE, json_data)
 
 if __name__ == '__main__':
     main()

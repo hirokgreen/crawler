@@ -189,7 +189,6 @@ def main():
                 article_wrapper = get_description_body(details_wrapper)
                 if article_wrapper:
                     description = get_description(details_wrapper)
-                    print description
                 generate_json(title, subject, image, caption, description)
     NDH.save_to_csv(TITLE, json_data)
 

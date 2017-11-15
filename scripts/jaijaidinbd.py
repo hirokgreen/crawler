@@ -64,7 +64,7 @@ def get_headlines(soup_parser, page):
 
     except AttributeError:
         logging.warning("PAGE {} NOT AVAILABLE. PROCESSING THE NEXT PAGE".format(page))
-        return None
+        return []
     return headlines
 
 
@@ -164,8 +164,8 @@ def main():
         prepared_url = os.path.join(req_url, '{}&archiev=yes&arch_date={}'.format(page, _input[1]))
         resp = NDH.get_request_data(prepared_url)
         soup = NDH.get_bs4_object(resp)
-        headlines = get_headlines(soup, page)
         logging.debug("GETTING DATA OF : {}".format(page))
+        headlines = get_headlines(soup, page)
         for headline in tqdm(headlines):
             link = base_url + headline.a['href']
             print link

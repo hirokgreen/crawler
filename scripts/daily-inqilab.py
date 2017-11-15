@@ -57,7 +57,7 @@ def get_headlines(soup_parser):
         headlines = soup_parser.find("div", attrs={"class": "main_cont"}).find("div", attrs={"class": "bluebullet"}).find_all("li")
     except AttributeError:
         logging.warning("PAGE NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED")
-        sys.exit()
+        return []
     return headlines
 
 
@@ -137,8 +137,8 @@ def main():
     req_url = os.path.join(base_url, 'archive/')
     resp = NDH.get_request_data(req_url)
     soup = NDH.get_bs4_object(resp)
-    headlines = get_headlines(soup)
     logging.debug("GETTING DATA OF PAGE {}".format(req_url))
+    headlines = get_headlines(soup)
     for headline in tqdm(headlines):
         link = headline.a['href']
         detail_req = NDH.get_request_data(link)

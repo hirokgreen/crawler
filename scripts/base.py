@@ -30,7 +30,7 @@ class NewsDataCollectionHelper(object):
         return resp
 
     def get_bs4_object(self, resp):
-        return bs4.BeautifulSoup(resp.text, 'html.parser')
+        return bs4.BeautifulSoup(resp.content, 'html.parser')
 
     def check_directory(self):
         directory = "data/"
