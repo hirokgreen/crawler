@@ -115,12 +115,12 @@ def get_subject(body):
 def get_description_body(body):
     try:
         description = body.find(
-            "div", attrs={"class": "description"}
+            "div", attrs={"class": "postBody"}
         )
-        [s.extract() for s in description('script')]
+        # [s.extract() for s in description('script')]
     except:
         return False
-    return description.text
+    return description
 
 
 def get_main_image(body):
@@ -185,15 +185,13 @@ def main():
                 logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
                 image = get_main_image(details_wrapper)
                 caption = get_image_caption(details_wrapper)
-                print caption
-                # # get artice body
-                # description = get_description(details_wrapper)
-                # generate_json(title, subject, image, caption, description)
-
-    #             generate_json(title, subject, image, caption, description)
-            break
-        break
-    # NDH.save_to_csv(TITLE, json_data)
+                # get artice body
+                article_wrapper = get_description_body(details_wrapper)
+                if article_wrapper:
+                    description = get_description(details_wrapper)
+                    print description
+                generate_json(title, subject, image, caption, description)
+    NDH.save_to_csv(TITLE, json_data)
 
 
 if __name__ == '__main__':

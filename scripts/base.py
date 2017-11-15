@@ -40,7 +40,6 @@ class NewsDataCollectionHelper(object):
             logging.critical("YOU HAVEN'T CREATE /DATA DIRECTORY. PLEASE CREATE IT AND AFTER THAT RE-RUN THE SCRIPT")
             sys.exit()
 
-
     def save_to_csv(self, title, json_data):
         timestr = time.strftime("%Y%m%d-%H%M%S")
         directory = "data/{}/".format(title)
