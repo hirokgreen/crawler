@@ -156,8 +156,8 @@ def main():
                 description = get_description(article_wrapper)
                 generate_json(title, subject, image, caption, description)
 
-        NDH.save_to_csv(TITLE, json_data)
-        break
+    NDH.save_to_csv(TITLE, json_data)
+
 
 if __name__ == '__main__':
     main()
