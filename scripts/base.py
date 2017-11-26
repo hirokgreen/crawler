@@ -49,9 +49,16 @@ class NewsDataCollectionHelper(object):
             except:
                 os.mkdir(directory)
             fp = csv.writer(open(directory + title +'_'+ timestr + ".csv", "wb+"))
-            fp.writerow(["SL", "title", "subject", "image", "caption", "description"])
+            fp.writerow(["SL", "title", "category", "sub_category", "subject", "image", "caption", "description"])
             for item in json_data:
-                fp.writerow([item["SL"], item["title"], item["subject"], item["image"], item["caption"], item["description"]])
+                try:
+                    item["category"]
+                    item["sub_category"]
+                except:
+                    item["category"] = "N/A"
+                    item["sub_category"] = "N/A"
+                fp.writerow([item["SL"], item["title"], item["category"], item["sub_category"],
+                             item["subject"], item["image"], item["caption"], item["description"]])
             logging.debug("FINISHED DATA COLLECTION OF #{}. THANK YOU".format(title))
         except OSError:
             logging.critical("YOU HAVEN'T CREATE /DATA DIRECTORY. PLEASE CREATE IT AND THEN RE-RUN THE SCRIPT")

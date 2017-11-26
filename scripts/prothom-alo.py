@@ -15,18 +15,23 @@ NDH = NewsDataCollectionHelper()
 coloredlogs.install(level='DEBUG')
 
 URL = 'http://www.prothom-alo.com'
-DATE = ''
+DATE = '2017-11-26'
 TITLE = 'prothom-alo'
 
 json_data = []
 
 
-def generate_json(title, subject, image, caption, description):
+def generate_json(title, category, sub_category, subject, image, caption, description):
     title = title.encode('utf8')
+    category = category.encode('utf8')
+    sub_category = sub_category.encode('utf8')
     subject = subject.encode('utf8')
     caption = caption.encode('utf8')
     description = description.encode('utf8')
-    json_data.append({"SL": len(json_data) + 1, "title": title, "subject": subject, "image": image, "caption": caption, "description": description})
+    json_data.append({"SL": len(json_data) + 1, "title": title,
+                      "category": category, "sub_category": sub_category, 
+                      "subject": subject, "image": image, "caption": caption,
+                      "description": description})
     
 
 def get_input():
@@ -59,6 +64,19 @@ def get_headlines(soup_parser, page):
         logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page + 1))
         return []
     return headlines
+
+def get_category(headline):
+    try:
+        return headline.find("a", attrs={"class": "category"}).string
+    except:
+        return 'N/A'
+
+def get_sub_category(soup_object):
+    try:
+        sub_category = soup_object.find("div", attrs={"class": "breadcrumb "}).find_all('li')[-1].a.string
+    except:
+        return 'N/A'
+    return sub_category
 
 
 def get_details_wrapper(soup_object):
@@ -146,11 +164,13 @@ def main():
 
         for headline in tqdm(headlines):
             link = base_url + headline.a['href']
+            category = get_category(headline)
             detail_req = NDH.get_request_data(link)
             soup2 = NDH.get_bs4_object(detail_req)
             details_wrapper = get_details_wrapper(soup2)
             if details_wrapper:
                 title = get_title(details_wrapper)
+                sub_category = get_sub_category(soup2)
                 subject = get_subject(details_wrapper)
                 logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
                 image = get_main_image(details_wrapper)
@@ -159,7 +179,7 @@ def main():
                 article_wrapper = get_description_body(details_wrapper)
                 if article_wrapper:
                     description = get_description(article_wrapper)
-                    generate_json(title, subject, image, caption, description)
+                    generate_json(title, category, sub_category, subject, image, caption, description)
     NDH.save_to_csv(TITLE, json_data)
 
 if __name__ == '__main__':
