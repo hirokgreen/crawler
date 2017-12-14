@@ -68,7 +68,13 @@ def get_headlines(soup_parser):
 
 def get_details_wrapper(soup_object):
     try:
-        wrapper = soup_object.find("div", attrs={"class": "home_top_left"})
+        wrapper = soup_object.find(
+            "div", attrs={"id": "content"}
+        ).find(
+            "div", attrs={"id": "areas"}
+        ).find(
+            "div", attrs={"id": "main"}
+        )
     except:
         logging.warning("ERROR WHILE PARSING DETAILS")
         return False
@@ -77,7 +83,9 @@ def get_details_wrapper(soup_object):
 
 def get_title(body):
     try:
-        title = body.find("h1").string
+        title = body.find(
+            "div", attrs={"id": "news-details-page"}
+        ).find("h1").string
     except:
         return 'N/A'
     return title
@@ -93,7 +101,11 @@ def get_subject(body):
 
 def get_description_body(body):
     try:
-        description = body.find("p").text
+        description = body.find(
+            "div", attrs={"class": "wrappingContent"}
+        ).find(
+            "div", attrs={"class": "custombody"}
+        )
     except:
         return False
     return description
@@ -102,8 +114,12 @@ def get_description_body(body):
 def get_main_image(body):
     try:
         image = body.find(
-            "img", attrs={"class": "image-responsive2"}
-        )["src"]
+            "div", attrs={"id": "gallery_page_customize"}
+        ).find(
+            "div", attrs={"class": "media"}
+        ).find(
+            "img"
+        )['src']
     except:
         return 'N/A'
     return image
@@ -112,8 +128,8 @@ def get_main_image(body):
 def get_image_caption(body):
     try:
         caption = body.find(
-            "img", attrs={"class": "image-responsive2"}
-        )["alt"]
+            "h5", attrs={"class": " print-only"}
+        ).text
     except:
         return "N/A"
     return caption
@@ -126,7 +142,7 @@ def get_description(body):
         for para in paras:
             array.append(para.get_text())
         if array:
-            description = '\n'.join(array) 
+            description = '\n'.join(array)
         else:
             description = 'N/A'
     except:
@@ -147,21 +163,22 @@ def main():
         heading = headline.find_all('a')
         category = heading[1].find("span").string
         link = heading[0].__dict__['attrs']['href']
-        print link
-    #     detail_req = NDH.get_request_data(link)
-    #     soup2 = NDH.get_bs4_object(detail_req)
-    #     details_wrapper = get_details_wrapper(soup2)
-    #     if details_wrapper:
-    #         title = get_title(details_wrapper)
-    #         subject = get_subject(details_wrapper)
-    #         logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
-    #         image = get_main_image(details_wrapper)
-    #         caption = get_image_caption(details_wrapper)
-    #         # get artice body
-    #         description = get_description(details_wrapper)
-    #         generate_json(title, category, subject, image, caption, description)
-    
-    # NDH.save_to_csv(TITLE, json_data)
+        detail_req = NDH.get_request_data(link)
+        soup2 = NDH.get_bs4_object(detail_req)
+        details_wrapper = get_details_wrapper(soup2)
+        if details_wrapper:
+            title = get_title(details_wrapper)
+            subject = get_subject(details_wrapper)
+            logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
+            image = get_main_image(details_wrapper)
+            caption = get_image_caption(details_wrapper)
+            # get artice body
+            article_wrapper = get_description_body(details_wrapper)
+            if article_wrapper:
+                description = get_description(article_wrapper)
+
+                generate_json(title, category, subject, image, caption, description)
+    NDH.save_to_csv(TITLE, json_data)
 
 
 if __name__ == '__main__':
