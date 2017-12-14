@@ -14,9 +14,9 @@ NDH = NewsDataCollectionHelper()
 
 coloredlogs.install(level='DEBUG')
 
-URL = 'http://www.prothom-alo.com'
+URL = 'http://www.bdlive24.com/home/allnewstitle'
 DATE = ''
-TITLE = 'prothom-alo'
+TITLE = 'BDLive24'
 
 json_data = []
 
@@ -59,7 +59,13 @@ def get_input():
 
 def get_headlines(soup_parser, page):
     try:
-        headlines = soup_parser.find("div", attrs={"class": "contents"}).find("div", attrs={"class": "row"}).find_all("div", attrs={"class": "col"})
+        headlines = soup_parser.find_all(
+            "div", attrs={"class": "container-fluid"}
+        )[-1].find(
+            "table", attrs={"class": "table"}
+        ).find(
+            'tbody'
+        ).find_all('td')
     except AttributeError:
         logging.warning("PAGE {} NOT AVAILABLE. COLLECTION OF DATA HAS BEEN FINISHED".format(page + 1))
         return []
@@ -151,36 +157,34 @@ def main():
     base_url = _input[0]
     if not base_url:
         return
-    if _input[1]:
-        req_url = os.path.join(base_url, 'archive/', _input[1])
-    else:
-        req_url = os.path.join(base_url, 'archive/')
-    for page in range(10):
-        prepared_url = os.path.join(req_url, '?page={}'.format(page + 1))
+    
+    # process first 500 news
+    for page in range(0, 550, 50):
+        prepared_url = os.path.join(base_url, '{}'.format(page))
         resp = NDH.get_request_data(prepared_url)
         soup = NDH.get_bs4_object(resp)
         logging.debug("GETTING DATA OF PAGE {}".format(page + 1))        
         headlines = get_headlines(soup, page)
-
-        for headline in tqdm(headlines):
-            link = base_url + headline.a['href']
-            category = get_category(headline)
-            detail_req = NDH.get_request_data(link)
-            soup2 = NDH.get_bs4_object(detail_req)
-            details_wrapper = get_details_wrapper(soup2)
-            if details_wrapper:
-                title = get_title(details_wrapper)
-                sub_category = get_sub_category(soup2)
-                subject = get_subject(details_wrapper)
-                logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
-                image = get_main_image(details_wrapper)
-                caption = get_image_caption(details_wrapper)
-                # get artice body
-                article_wrapper = get_description_body(details_wrapper)
-                if article_wrapper:
-                    description = get_description(article_wrapper)
-                    generate_json(title, category, sub_category, subject, image, caption, description)
-    NDH.save_to_csv(TITLE, json_data)
+        for headline in tqdm(headlines[:-1]):
+            link = headline.a['href']
+            print link
+    #         category = get_category(headline)
+    #         detail_req = NDH.get_request_data(link)
+    #         soup2 = NDH.get_bs4_object(detail_req)
+    #         details_wrapper = get_details_wrapper(soup2)
+    #         if details_wrapper:
+    #             title = get_title(details_wrapper)
+    #             sub_category = get_sub_category(soup2)
+    #             subject = get_subject(details_wrapper)
+    #             logging.debug("PROCESSING HEADLINE {}".format(title.encode('utf8')))
+    #             image = get_main_image(details_wrapper)
+    #             caption = get_image_caption(details_wrapper)
+    #             # get artice body
+    #             article_wrapper = get_description_body(details_wrapper)
+    #             if article_wrapper:
+    #                 description = get_description(article_wrapper)
+    #                 generate_json(title, category, sub_category, subject, image, caption, description)
+    # NDH.save_to_csv(TITLE, json_data)
 
 if __name__ == '__main__':
     main()
