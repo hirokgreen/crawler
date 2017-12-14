@@ -93,7 +93,11 @@ def get_title(body):
 
 def get_subject(body):
     try:
-        subject = 'N/A'
+        subject = body.find(
+            "div", attrs={"class": "article_lead_text"}
+        ).find(
+            "h5", attrs={"class": "print-only"}
+        ).string
     except:
         return 'N/A'
     return subject
@@ -113,16 +117,28 @@ def get_description_body(body):
 
 def get_main_image(body):
     try:
-        image = body.find(
+        images = []
+        main_image = body.find(
             "div", attrs={"id": "gallery_page_customize"}
         ).find(
             "div", attrs={"class": "media"}
         ).find(
             "img"
         )['src']
+        
+        images.append(main_image)
+
+        other_images = body.find(
+            "div", attrs={"class": "wrappingContent"}
+        ).find_all(
+            "img"
+        )
+        
+        for item in other_images:
+            images.append(item['src'])
     except:
         return 'N/A'
-    return image
+    return ', '.join(images)
 
 
 def get_image_caption(body):
@@ -178,6 +194,7 @@ def main():
                 description = get_description(article_wrapper)
 
                 generate_json(title, category, subject, image, caption, description)
+
     NDH.save_to_csv(TITLE, json_data)
 
 

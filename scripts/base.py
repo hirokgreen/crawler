@@ -53,9 +53,11 @@ class NewsDataCollectionHelper(object):
             for item in json_data:
                 try:
                     item["category"]
+                except:
+                    item["sub_category"] = "N/A"
+                try:
                     item["sub_category"]
                 except:
-                    item["category"] = "N/A"
                     item["sub_category"] = "N/A"
                 fp.writerow([item["SL"], item["title"], item["category"], item["sub_category"],
                              item["subject"], item["image"], item["caption"], item["description"]])
